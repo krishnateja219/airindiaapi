@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd ">
     <apikit:config name="airindiaapi-config" api="airindiaapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="adce79c0-7020-425d-8a12-6029c8863fdf" >
+    <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="433c94f0-5104-42b5-92c0-b46a6dfbd6f7" >
 		<http:listener-connection host="0.0.0.0" port="8081" />
 	</http:listener-config>
 	<flow name="airindiaapi-main">
-        <http:listener path="/airIndia/api/*" config-ref="HTTP_Listener_config">
+        <http:listener config-ref="HTTP_Listener_config" path="airindia/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
             </http:response>
@@ -96,7 +96,82 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
+    <flow name="airindiaapi-console">
+        <http:listener config-ref="HTTP_Listener_config" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="airindiaapi-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
     <flow name="get:\airIndiaflights:airindiaapi-config">
-		<flow-ref doc:name="Flow Reference" doc:id="60e0de23-be01-49f7-b0f1-273775837e25" name="airIndiaflightsFlow"/>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+  {
+    Id: "201",
+    airlineName: "AirIndia",
+    fCode: "AI201",
+    fromAirportCode: "HYD",
+    toAirportCode: "BANG",
+    departureDate: "25-Sep-2021",
+    emptySeats: "0",
+    totalSeats: 200,
+    price: "199",
+    planeType: "AirIndia 737"
+  }, 
+  {
+    Id: "202",
+    airlineName: "AirIndia",
+    fCode: "AI202",
+    fromAirportCode: "HYD",
+    toAirportCode: "BANG",
+    departureDate: "25-Sep-2021",
+    emptySeats: "24",
+    totalSeats: 350,
+    price: "450",
+    planeType: "AirIndia 747"
+  }, 
+  {
+    Id: "203",
+    airlineName: "AirIndia",
+    fCode: "AI203",
+    fromAirportCode: "HYD",
+    toAirportCode: "BANG",
+    departureDate: "25-Sep-2021",
+    emptySeats: "33",
+    totalSeats: 400,
+    price: "450",
+    planeType: "AirIndia 757"
+  }
+]]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\airIndiaflights\(source)\(destination)\(doj):airindiaapi-config">
+		<logger level="INFO" doc:name="Logger" doc:id="0bfa9302-43ee-4931-a891-e772396381ec" message="request received"/>
+		<flow-ref doc:name="Flow Reference" doc:id="d984cba4-fbb8-488e-a8ee-4e979dd36dfc" name="airIndiaflightsbyuriParamsFlow"/>
     </flow>
 </mule>
