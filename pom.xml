@@ -34,8 +34,8 @@
 			      <uri>https://anypoint.mulesoft.com</uri>
 				  <username>krishnateja219</username>
 				  <password>Aramakrishna219</password>
-				  <environment>Sandbox</environment>
-				  <applicationName>airindiaapi</applicationName>
+				  <environment>DEV</environment>
+				  <applicationName>airindiaapi-dev</applicationName>
 			      <muleVersion>4.3.0</muleVersion>
 				  <workers>1</workers>
 				  <workerType>MICRO</workerType>
